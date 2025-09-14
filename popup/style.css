@@ -1,0 +1,47 @@
+/* Main */
+body {
+    height: 280px;
+    width: 305px;
+    background-color: lightslategray;
+    padding: 9px;
+}
+
+#maincontainer {
+    height: fit-content;
+    background-color: whitesmoke;
+    padding: 5px;
+    /*border: 2px solid black; */
+}
+
+#actiontitle {
+    text-align: center;
+}
+
+/* timer area */
+#timer {
+    display: flex;
+    height: 100px;
+    margin: 10px;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed black;
+}
+#time {
+    font-size: 50px;
+}
+
+/* Buttons */
+.buttondiv {
+    display: flex;
+    height: 40px;
+    margin: 10px;
+    display: flex;
+    justify-content: center;
+    /* background-color: salmon;
+    border: 1px dashed blue; */
+}
+
+.mainbutton {
+    display: block;
+    width: 100%;
+}
