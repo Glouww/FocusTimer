@@ -18,7 +18,7 @@ body {
 }
 
 /* timer area */
-#timer {
+#timerdiv {
     display: flex;
     height: 100px;
     margin: 10px;
@@ -26,9 +26,8 @@ body {
     justify-content: center;
     border: 1px dashed black;
 }
-#time {
-    font-size: 50px;
-}
+
+
 
 /* Buttons */
 .buttondiv {
