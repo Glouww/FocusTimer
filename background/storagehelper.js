@@ -1,4 +1,6 @@
 const storageHelper = {
+  
+  // Time methods
   async getEndTime() {
     const data = await chrome.storage.local.get("endTime");
     return data.endTime;
@@ -19,6 +21,16 @@ const storageHelper = {
 
   async clear() {
     await chrome.storage.local.remove(["endTime", "remainingTime"]);
+  },
+
+  // Timer Status Methods
+  async getStatus() {
+    const data = await chrome.storage.local.get("timerStatus");
+    return data.timerStatus;
+  },
+
+  async setStatus(timerStatus) {
+    await chrome.storage.local.set({ timerStatus });
   }
 };
 

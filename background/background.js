@@ -5,7 +5,7 @@ console.log("============================")
 console.log("** Service worker running **")
 console.log("============================")
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, sendResponse) => {
   // Service worker will handle logic here based on the kind of messages it receives
   console.log("Service Worker: request received -> ", request);
 
@@ -21,11 +21,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             sendResponse({ status: "Timer Running!:" + durationMinutes + " minutes."});
           })();
           break;
-          /* 
-          *
-          * FIX: end.time needs to be updated throughout the timer.
-          * 
-          */
         
         case "pauseTimer":
           (async () => {
@@ -51,15 +46,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               sendResponse({ status: "Cannot resume, timer already finished." });
               return;
             }
-            
-            /* AI ALTERED */
-
             // Update endTime so it's accurate for the resumed timer
             const newEndTime = Date.now() + remainingTime;
             await storageHelper.setEndTime(newEndTime);
-            
-            /* AI ALTERED */
-
             await chrome.alarms.clearAll();
             chrome.alarms.create("focusTimer", {delayInMinutes: remainingMin});
             sendResponse({ status: "Timer resumed with:" + formattedTime + " left."});

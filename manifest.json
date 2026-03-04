@@ -3,8 +3,16 @@
     "description": "In progress - A website blocking extension that allows you to focus on your work for a set time.",
     "version": "0.0.1",
     "manifest_version": 3,
+    
     "action": {
       "default_popup": "popup/popupMain.html",
       "default_title": "Click to Open Focus Timer"
-    }
+    },
+    
+    "background": {
+      "service_worker": "background/background.js",
+      "type": "module"
+    },
+
+    "permissions": ["scripting", "activeTab", "notifications", "alarms", "storage"]
 }
