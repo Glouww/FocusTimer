@@ -7,16 +7,20 @@ console.log("============================")
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   // Service worker will handle logic here based on the kind of messages it receives
-  console.log("Service Worker: request received -> ", request);
+  console.log("[Service Worker]: request received -> ", request);
 
     switch(request.action) {
         case "startTimer":
           (async () => {
-            const durationMinutes = 0.2; //CHANGE THIS TO INPUT IN THE FUTURE
+            // const durationMinutes = 1; //CHANGE THIS TO INPUT IN THE FUTURE
+            let durationMinutes = Number(await storageHelper.getUserDuration());
+
             const endTime = Date.now() + durationMinutes * 60000; // time conversion to ms
-            const status = "running"; // Timer status for popup display
             
+            //polling logic
+            const status = "running"; // Timer status for popup display
             await storageHelper.setDuration(durationMinutes); // Saves duration for popup.js to fetch for time polling
+            
             await storageHelper.setEndTime(endTime);
             await chrome.alarms.clearAll();
             chrome.alarms.create("focusTimer", {delayInMinutes: durationMinutes});

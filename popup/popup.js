@@ -8,25 +8,25 @@ import { formatTime } from "../background/utils.js";
 
 document.getElementById('startbutton').addEventListener('click', () => {
   chrome.runtime.sendMessage({ action: "startTimer", data: "Timer start requested." }, (response) => {
-    console.log("popup: Response received ->", response);
+    console.log("[popup]: Response received ->", response);
   });
 });
 
 document.getElementById('pausebutton').addEventListener('click', () => {
   chrome.runtime.sendMessage({ action: "pauseTimer", data: "Timer pause requested." }, (response) => {
-    console.log("popup: Response received ->", response);
+    console.log("[popup]: Response received ->", response);
   });
 });
 
 document.getElementById('resumebutton').addEventListener('click', () => {
   chrome.runtime.sendMessage({ action: "resumeTimer", data: "Timer resume requested." }, (response) => {
-    console.log("popup: Response received ->", response);
+    console.log("[popup]: Response received ->", response);
   });
 });
 
 document.getElementById('resetbutton').addEventListener('click', () => {
   chrome.runtime.sendMessage({ action: "resetTimer", data: "Timer reset requested." }, (response) => {
-    console.log("popup: Response received ->", response);
+    console.log("[popup]: Response received ->", response);
   });
 });
 
@@ -35,6 +35,9 @@ document.getElementById('resetbutton').addEventListener('click', () => {
   Chrome.Storage API and updates every second with a second less. This was also built in the possibility
   of the service worker going to sleep and not updating the timer on the frontend. This ensures that the
   user always knows the time. */
+
+/* Issue: this doesn't update the frontend when the user interacts with the extension unless they
+refresh it. This needs to be redone. */
 
 document.addEventListener('DOMContentLoaded', async () => {
   const timerStatus = await storageHelper.getStatus();

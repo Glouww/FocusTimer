@@ -1,6 +1,16 @@
 const storageHelper = {
 
-  // Time methods
+  // User-defined duration functions
+  async setUserDuration(userDuration) {
+    await chrome.storage.local.set({ userDuration });
+  },
+
+  async getUserDuration() {
+    const data = await chrome.storage.local.get("userDuration");
+    return data.userDuration;
+  },
+
+  // Timer methods
   async getEndTime() {
     const data = await chrome.storage.local.get("endTime");
     return data.endTime;

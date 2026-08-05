@@ -1,0 +1,8 @@
+TODO:
+
+1. Make button changing logic
+2. create a variable to allow user input-based time.
+3. Solve time polling issue- it's only updating when refreshing the extension, need to
+update when interacting as well.
+4. [Advanced] Consider changing background.js time variables global, and change them
+in each function instead of creating new functions every time.
