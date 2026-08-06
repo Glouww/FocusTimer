@@ -3,30 +3,55 @@
 import storageHelper from "../background/storagehelper.js";
 import { formatTime } from "../background/utils.js";
 
-/* TODO: 1-Implement timer polling logic to button event listeners
-         2-Implement button changing mechanism based on timer status.*/
+/* TODO: 2-Implement button changing mechanism based on timer status.*/
+
+let popupInterval; // ID for startCountdown interval
+
+// Updates the popup's display, so the user can see the time go down
+function updateDisplay(remainingMs) {
+  document.getElementById('timedisplay').textContent = formatTime(remainingMs);
+};
+
+// This function will receive a Alarm status and time from SW's messages and will run
+// a paralel interval when status = "running"
+function startCountdown(status, time) {
+  clearInterval(popupInterval); // Clears any potential ongoing intervals
+  if(status === "running") {
+    popupInterval = setInterval( () => {
+      const remainingTime = time - Date.now();
+      updateDisplay(remainingTime);
+    }, 1000);
+  } else {
+    updateDisplay(time); // Shows either paused time or "start" time
+  }
+};
+
 
 document.getElementById('startbutton').addEventListener('click', () => {
   chrome.runtime.sendMessage({ action: "startTimer", data: "Timer start requested." }, (response) => {
     console.log("[popup]: Response received ->", response);
+    startCountdown(response.status, response.time);
   });
 });
 
 document.getElementById('pausebutton').addEventListener('click', () => {
   chrome.runtime.sendMessage({ action: "pauseTimer", data: "Timer pause requested." }, (response) => {
     console.log("[popup]: Response received ->", response);
+    startCountdown(response.status, response.time);
   });
 });
 
 document.getElementById('resumebutton').addEventListener('click', () => {
   chrome.runtime.sendMessage({ action: "resumeTimer", data: "Timer resume requested." }, (response) => {
     console.log("[popup]: Response received ->", response);
+    startCountdown(response.status, response.time);
   });
 });
 
 document.getElementById('resetbutton').addEventListener('click', () => {
   chrome.runtime.sendMessage({ action: "resetTimer", data: "Timer reset requested." }, (response) => {
     console.log("[popup]: Response received ->", response);
+    startCountdown(response.status, response.time);
   });
 });
 
@@ -54,3 +79,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('timedisplay').textContent = formatTime(remainingTime);
   }
 });
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const timerStatus = await storageHelper.getStatus(); // Fetches status to run conditions/functions
+  if (timerStatus == "idle") {
+    startCountdown(timerStatus, await storageHelper.getUserDuration() * 60000);
+  } else if (timerStatus == "running") {
+    startCountdown(timerStatus, await storageHelper.getEndTime());
+  } else if (timerStatus == "paused") {
+    startCountdown(timerStatus, await storageHelper.getRemainingTime());
+  }
+}
+); /* Despite the conditions being redundant due to startCountdown() already checking them, it makes
+  the logic easier to follow than abstracting to a map function. */
+
+

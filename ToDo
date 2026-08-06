@@ -1,8 +1,38 @@
 TODO:
 
 1. Make button changing logic
-2. create a variable to allow user input-based time.
-3. Solve time polling issue- it's only updating when refreshing the extension, need to
-update when interacting as well.
-4. [Advanced] Consider changing background.js time variables global, and change them
+2. [DONE] create a variable to allow user input-based time.
+3. [DONE] getUserDuration() now defaults to 60 when unset (object-style chrome.storage.local.get default).
+
+4. Remove durationMinutes scaffolding:
+   4.1 [DONE] remove setDuration/getDuration from storagehelper.js
+   4.2 [DONE] remove the setDuration(durationMinutes) call inside background.js startTimer case
+
+5. Rework background.js action cases:
+   5.1 [DONE] startTimer -> use storageHelper.getUserDuration() only (already does, just drop setDuration call per #4.2)
+   5.2 [DONE] change all sendResponse({...}) calls to send actual data, not human-readable debug strings.
+       Each response needs: { status: "idle"|"running"|"paused", time: <ms value appropriate to status> }
+       - [DONE] startTimer response -> status "running", time = endTime (or remaining ms, decide at popup call site)
+       - [DONE] pauseTimer response -> status "paused", time = remainingTime
+       - [DONE] resumeTimer response -> status "running", time = newEndTime
+       - [DONE] resetTimer response -> status "idle", time = userDuration default (ms)
+
+6. popup.js rework:
+   6.1 [DONE] write updateDisplay(remainingMs) - dumb function, just formatTime() + write to #timedisplay. No status branching inside it.
+   6.2 [DONE] write startCountdown(status, timeValue) - clears existing intervalId first (clearInterval),
+       if status === "running": setInterval every 1000ms recalculating remaining ms from endTime and calling updateDisplay()
+       if status !== "running": just call updateDisplay() once with correct ms value, no interval started
+   6.3 [DONE] declare `let intervalId;` at module/file scope (top of popup.js, outside any function)
+   6.4 [DONE] DOMContentLoaded: fetch status from storage, call startCountdown(status, ...) using existing storageHelper getters
+       - idle case -> use (await storageHelper.getUserDuration()) * 60000 as the ms value
+   6.5 [DONE] each button handler (start/pause/resume/reset): after receiving sendResponse, call startCountdown(response.status, response.time)
+
+Known limitation - not blocking current work, revisit later:
+- chrome.alarms.onAlarm listener (natural timer finish) currently only console.logs.
+  timerStatus is never reset to "idle" when the alarm fires naturally (no button press).
+  No popup may be open to receive a response at that moment either - will likely need
+  chrome.storage.onChanged listener in popup.js, or notifications API, rather than the
+  sendResponse pattern used for button-triggered actions. Address after core rework above works.
+
+[Optional-optimisation] Consider changing background.js time variables global, and change them
 in each function instead of creating new functions every time.

@@ -6,7 +6,7 @@ const storageHelper = {
   },
 
   async getUserDuration() {
-    const data = await chrome.storage.local.get("userDuration");
+    const data = await chrome.storage.local.get({ userDuration: 60});
     return data.userDuration;
   },
 
@@ -46,15 +46,6 @@ const storageHelper = {
     await chrome.storage.local.set({ timerStatus });
   },
 
-  // Utility Methods
-  async getDuration() {
-    const data = await chrome.storage.local.get("durationMinutes");
-    return data.durationMinutes;
-  },
-
-  async setDuration(durationMinutes) {
-    await chrome.storage.local.set({ durationMinutes });
-  }
 };
 
 export default storageHelper;

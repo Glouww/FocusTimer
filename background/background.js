@@ -12,20 +12,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch(request.action) {
         case "startTimer":
           (async () => {
-            // const durationMinutes = 1; //CHANGE THIS TO INPUT IN THE FUTURE
+            // Fetches user-set duration from storage
             let durationMinutes = Number(await storageHelper.getUserDuration());
-
             const endTime = Date.now() + durationMinutes * 60000; // time conversion to ms
             
             //polling logic
             const status = "running"; // Timer status for popup display
-            await storageHelper.setDuration(durationMinutes); // Saves duration for popup.js to fetch for time polling
-            
-            await storageHelper.setEndTime(endTime);
+
+            await storageHelper.setEndTime(endTime);            
             await chrome.alarms.clearAll();
             chrome.alarms.create("focusTimer", {delayInMinutes: durationMinutes});
             await storageHelper.setStatus(status); //Saves current timer status
-            sendResponse({ status: "Timer Running!:" + durationMinutes + " minutes."});
+          sendResponse({ status: status, time: endTime });
+
           })();
           break;
         
@@ -41,7 +40,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             console.log("Remaining time stored.")
             await chrome.alarms.clearAll();
             await storageHelper.setStatus(status); //Saves current timer status
-            sendResponse({ status: "Timer paused at " + formattedTime });
+            sendResponse({ status: status, time: remainingTime });
           })();
           break;
 
@@ -53,7 +52,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const status = "running"; // Timer status for popup display
 
             if (remainingTime <= 0) {
-              sendResponse({ status: "Cannot resume, timer already finished." });
+              sendResponse({ status: "idle", time: await storageHelper.getUserDuration() * 60000 });
               return;
             }
 
@@ -63,7 +62,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             await chrome.alarms.clearAll();
             chrome.alarms.create("focusTimer", {delayInMinutes: remainingMin});
             await storageHelper.setStatus(status); //Saves current timer status
-            sendResponse({ status: "Timer resumed with:" + formattedTime + " left."});
+            sendResponse({ status: status, time: newEndTime });
           })();
           break;
 
@@ -75,7 +74,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             await storageHelper.clear();
             await chrome.alarms.clearAll();
             await storageHelper.setStatus(status); //Saves current timer status
-            sendResponse({ status: "Timer reset successful!"});
+            // Since popup.js's DOM wrapper still needs a variable, might as well use it for status too instead of having
+            // two different variables. Also, unlike the other cases there's no local variable to depend on.
+            sendResponse({ status: status, time: await storageHelper.getUserDuration() * 60000 });
           })();
           break;
 
