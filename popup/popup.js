@@ -5,6 +5,8 @@ import { formatTime } from "../background/utils.js";
 
 /* TODO: 2-Implement button changing mechanism based on timer status.*/
 
+let timerStatus; // variable to run status-based conditions
+
 let popupInterval; // ID for startCountdown interval
 
 // Updates the popup's display, so the user can see the time go down
@@ -26,69 +28,76 @@ function startCountdown(status, time) {
   }
 };
 
+// Changes buttons content as they switch uses.
+function buttonChanger (status) {
+  switch (status) {
+    case "idle":
+      document.getElementById('startbutton').textContent = "Start";
+      break;
+    case "paused":
+      document.getElementById('startbutton').textContent = "Resume";
+      break;
+    case "running":
+      document.getElementById('startbutton').textContent = "Pause";
+      break;
+    default:
+      document.getElementById('startbutton').textContent = "Start";
+      break;
+  }
+};
 
+// Multi-function button logic. 
+// The DOM even listener already populates timerstatus when the popup loads, so this can run with just timerStatus.
 document.getElementById('startbutton').addEventListener('click', () => {
-  chrome.runtime.sendMessage({ action: "startTimer", data: "Timer start requested." }, (response) => {
-    console.log("[popup]: Response received ->", response);
-    startCountdown(response.status, response.time);
-  });
-});
-
-document.getElementById('pausebutton').addEventListener('click', () => {
-  chrome.runtime.sendMessage({ action: "pauseTimer", data: "Timer pause requested." }, (response) => {
-    console.log("[popup]: Response received ->", response);
-    startCountdown(response.status, response.time);
-  });
-});
-
-document.getElementById('resumebutton').addEventListener('click', () => {
-  chrome.runtime.sendMessage({ action: "resumeTimer", data: "Timer resume requested." }, (response) => {
-    console.log("[popup]: Response received ->", response);
-    startCountdown(response.status, response.time);
-  });
+  switch (timerStatus)  {
+    case "idle":
+      chrome.runtime.sendMessage({ action: "startTimer", data: "Timer start requested." }, (response) => {
+        console.log("[popup]: Response received ->", response);
+        timerStatus = response.status; // updates variable after each press so timer functions dont get stuck
+        startCountdown(response.status, response.time);
+        buttonChanger(response.status);
+    });
+      break;
+    case "running":
+      chrome.runtime.sendMessage({ action: "pauseTimer", data: "Timer pause requested." }, (response) => {
+        console.log("[popup]: Response received ->", response);
+        timerStatus = response.status;
+        startCountdown(response.status, response.time);
+        buttonChanger(response.status);
+      });
+      break;
+    case "paused":
+      chrome.runtime.sendMessage({ action: "resumeTimer", data: "Timer resume requested." }, (response) => {
+        console.log("[popup]: Response received ->", response);
+        timerStatus = response.status;
+        startCountdown(response.status, response.time);
+        buttonChanger(response.status);
+      });
+      break;
+  }
 });
 
 document.getElementById('resetbutton').addEventListener('click', () => {
   chrome.runtime.sendMessage({ action: "resetTimer", data: "Timer reset requested." }, (response) => {
     console.log("[popup]: Response received ->", response);
+    timerStatus = response.status;
     startCountdown(response.status, response.time);
+    buttonChanger(response.status);
   });
 });
 
-/* This code is responsible for showing the time going down to the user when the extension is opened 
-  (the DOM loads). To reduce the load on the SW, It runs a local time estimation of the timer using 
-  Chrome.Storage API and updates every second with a second less. This was also built in the possibility
-  of the service worker going to sleep and not updating the timer on the frontend. This ensures that the
-  user always knows the time. */
-
-/* Issue: this doesn't update the frontend when the user interacts with the extension unless they
-refresh it. This needs to be redone. */
-
+// Checks timer status when loading the popup to display time 
 document.addEventListener('DOMContentLoaded', async () => {
-  const timerStatus = await storageHelper.getStatus();
-  if (timerStatus == "idle") {
-    const setDuration = await storageHelper.getDuration();
-    document.getElementById('timedisplay').textContent = setDuration;
-  } else if (timerStatus == "running") {
-    setInterval(async() => {
-      const remainingTime = (await storageHelper.getEndTime()) - Date.now();
-      document.getElementById('timedisplay').textContent = formatTime(remainingTime);
-    }, 1000);
-  } else if (timerStatus == "paused") {
-    const remainingTime = await storageHelper.getRemainingTime();
-    document.getElementById('timedisplay').textContent = formatTime(remainingTime);
-  }
-});
-
-
-document.addEventListener('DOMContentLoaded', async () => {
-  const timerStatus = await storageHelper.getStatus(); // Fetches status to run conditions/functions
+  timerStatus = await storageHelper.getStatus(); // Fetches status to run conditions/functions
   if (timerStatus == "idle") {
     startCountdown(timerStatus, await storageHelper.getUserDuration() * 60000);
+    buttonChanger(timerStatus);
   } else if (timerStatus == "running") {
     startCountdown(timerStatus, await storageHelper.getEndTime());
+    buttonChanger(timerStatus);
   } else if (timerStatus == "paused") {
     startCountdown(timerStatus, await storageHelper.getRemainingTime());
+    buttonChanger(timerStatus);
   }
 }
 ); /* Despite the conditions being redundant due to startCountdown() already checking them, it makes

@@ -1,6 +1,11 @@
 import storageHelper from "./storagehelper.js";
 import { formatTime } from "./utils.js";
 
+// Makes sure the timer has a default status when the user first launches the extension.
+chrome.runtime.onInstalled.addListener(async () => {
+  await storageHelper.setStatus("idle");
+});
+
 console.log("============================")
 console.log("** Service worker running **")
 console.log("============================")
@@ -17,7 +22,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const endTime = Date.now() + durationMinutes * 60000; // time conversion to ms
             
             //polling logic
-            const status = "running"; // Timer status for popup display
+            const status = "running"; // Timer status for messaging and storage
 
             await storageHelper.setEndTime(endTime);            
             await chrome.alarms.clearAll();
