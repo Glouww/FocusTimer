@@ -1,26 +1,60 @@
+async function getTimerStatus() {
+    const data = await chrome.storage.local.get("timerStatus");
+    return data.timerStatus
+}
 
-/* To do:
-* - When to check for timer status (use run_at)
-* - Acitvation function
-* - Removal function
-* */
-
-let timerStatus = chrome.storage.local.get("timerStatus");
-let div
-// blocking and unblocking functions
-function block() {
-    div = document.createElement("div");
-    div.attachShadow({mode: "open"}); //Attaches shadowDOM to the div to inject html
-
+async function applyBlocker() {
+    const timerStatus = await getTimerStatus();
+    if (timerStatus === "running"){
+        block();
+    } else {
+        unblock();
+    };
 };
 
+// blocking and unblocking functions
 
+let div // declared so div is identifiable for block/unblock functions
 
+function block() {
+    div = document.createElement("div");
+    const shadow = div.attachShadow({mode: "open"}); //Attaches shadowDOM to the div to inject html
+    
+    shadow.innerHTML = `
+    <style>
+        :host {
+            background-color: hsl(0, 2%, 9%);
+            position: fixed;
+            inset: 0;
+            z-index: 90000; /* High value to stay on top*/
+            /* Flex properties to centre text and button*/
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        h1 {
+            font-weight: bold;
+            color: whitesmoke;
+        }
+    </style>
+    <h1>Block Message</h1>
+    <button id="button">Return</button>
+    `;
 
+    document.addEventListener("DOMContentLoaded", () => {
+        document.body.appendChild(div);
+    });
+    shadow.getElementById("button").addEventListener("click", () => {
+        console.log("Button clicked!"); // for now for debugging
+    });
+};
 
-
-
-
+function unblock () {
+    if (div) {
+        document.body.removeChild(div);
+        div = undefined;
+    }
+};
 
 
 
