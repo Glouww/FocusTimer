@@ -14,5 +14,13 @@
       "type": "module"
     },
 
+    "content_scripts": [{
+      "type": "module",
+      "matches": "*://*.youtube.com/*",
+      "js": "content/blocker.js",
+      "css": "content/blocker.css",
+      "run_at": "document_start"
+    }],
+    
     "permissions": ["scripting", "activeTab", "notifications", "alarms", "storage"]
 }
